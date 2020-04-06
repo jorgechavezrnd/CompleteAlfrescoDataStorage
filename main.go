@@ -141,6 +141,7 @@ func createMissingFiles() {
 
 	existingFilesCount := 0
 	nonExistingFilesCount := 0
+	notValidDateCount := 0
 
 	for index, alfContentURL := range alfContentURLList {
 		filePath := config.ContentstorePath + alfContentURL.ContentURL
@@ -156,6 +157,7 @@ func createMissingFiles() {
 				createFile(filePath, 1000)
 			} else {
 				log.Printf("ContentURL is less than 'generateFromThisDate' configuration: " + alfContentURL.ContentURL)
+				notValidDateCount++
 			}
 		} else {
 			log.Printf("%d.- File %s exists\n", (index + 1), filePath)
@@ -166,6 +168,7 @@ func createMissingFiles() {
 	log.Println("Create Missing Files End")
 	log.Printf("Existing Files Count: %d", existingFilesCount)
 	log.Printf("Non Existing Files Count: %d", nonExistingFilesCount)
+	log.Printf("Not Validate Date Count: %d", notValidDateCount)
 }
 
 func isValidDate(contentURL string) bool {
