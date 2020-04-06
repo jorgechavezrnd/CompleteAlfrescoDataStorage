@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -21,12 +22,13 @@ type AlfContentURL struct {
 
 // Config ...
 type Config struct {
-	Host             string `json:"host"`
-	Port             int    `json:"port"`
-	Username         string `json:"username"`
-	Password         string `json:"password"`
-	Database         string `json:"database"`
-	ContentstorePath string `json:"contentstorePath"`
+	Host                 string `json:"host"`
+	Port                 int    `json:"port"`
+	Username             string `json:"username"`
+	Password             string `json:"password"`
+	Database             string `json:"database"`
+	ContentstorePath     string `json:"contentstorePath"`
+	GenerateFromThisDate string `json:"generateFromThisDate"`
 }
 
 // Global variables
@@ -144,13 +146,17 @@ func createMissingFiles() {
 		filePath := config.ContentstorePath + alfContentURL.ContentURL
 		_, err := os.Stat(filePath)
 		if os.IsNotExist(err) {
-			log.Printf("%d.- File %s does not exist\n", (index + 1), filePath)
-			nonExistingFilesCount++
+			if isValidDate(alfContentURL.ContentURL) {
+				log.Printf("%d.- File %s does not exist\n", (index + 1), filePath)
+				nonExistingFilesCount++
 
-			folderPath := getFolderPath(alfContentURL.ContentURL)
-			createFolderPath(folderPath)
-			// createFile(filePath, alfContentURL.ContentSize)
-			createFile(filePath, 1)
+				folderPath := getFolderPath(alfContentURL.ContentURL)
+				createFolderPath(folderPath)
+				// createFile(filePath, alfContentURL.ContentSize)
+				createFile(filePath, 1000)
+			} else {
+				log.Printf("ContentURL is less than 'generateFromThisDate' configuration: " + alfContentURL.ContentURL)
+			}
 		} else {
 			log.Printf("%d.- File %s exists\n", (index + 1), filePath)
 			existingFilesCount++
@@ -160,6 +166,39 @@ func createMissingFiles() {
 	log.Println("Create Missing Files End")
 	log.Printf("Existing Files Count: %d", existingFilesCount)
 	log.Printf("Non Existing Files Count: %d", nonExistingFilesCount)
+}
+
+func isValidDate(contentURL string) bool {
+	fromThisDate := strings.Split(config.GenerateFromThisDate, "/")
+	contentURLDate := strings.Split(contentURL, "/")
+
+	if len(fromThisDate) == 0 && len(contentURLDate) == 0 {
+		log.Println("Error on generateFromThisDate in config.js or contentURL")
+		log.Fatal("generateFromThisDate: " + config.GenerateFromThisDate + ", contentURL: " + contentURL)
+	}
+
+	contentURLDate = contentURLDate[:len(contentURLDate)-1]
+
+	if len(fromThisDate) != len(contentURLDate) {
+		log.Println("FromThisDate and ContentURLDate don't have same len")
+		log.Fatal(fmt.Sprintf("FromThisDate len: %d, ContentURLDate len: %d", len(fromThisDate), len(contentURLDate)))
+	}
+
+	for index := range fromThisDate {
+		fromThisDateValue, err := strconv.Atoi(fromThisDate[index])
+		if err != nil {
+			log.Fatal("Error on convert GenerateFromThisDate to int: " + err.Error())
+		}
+		contentURLDateValue, err := strconv.Atoi(contentURLDate[index])
+		if err != nil {
+			log.Fatal("Error on convert ContentURLDate to int: " + err.Error())
+		}
+		if contentURLDateValue < fromThisDateValue {
+			return false
+		}
+	}
+
+	return true
 }
 
 func getFolderPath(contentURL string) string {
