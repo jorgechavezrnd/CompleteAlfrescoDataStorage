@@ -11,8 +11,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/rickb777/date"
 )
 
 // AlfContentURL ...
@@ -225,23 +227,51 @@ func isValidDate(contentURL string) bool {
 
 	contentURLDate = contentURLDate[:len(contentURLDate)-1]
 
-	if len(fromThisDate) != len(contentURLDate) {
-		log.Println("FromThisDate and ContentURLDate don't have same len")
-		log.Fatal(fmt.Sprintf("FromThisDate len: %d, ContentURLDate len: %d", len(fromThisDate), len(contentURLDate)))
+	// GenerateFromThisDate to Date
+	ftdYear, err := strconv.Atoi(fromThisDate[0])
+	if err != nil {
+		log.Fatal("Error on parse generateFromThisDate config year: " + err.Error())
+	}
+	ftdMonth, err := strconv.Atoi(fromThisDate[1])
+	if err != nil {
+		log.Fatal("Error on parse generateFromThisDate config month: " + err.Error())
+	}
+	ftdDay, err := strconv.Atoi(fromThisDate[2])
+	if err != nil {
+		log.Fatal("Error on parse generateFromThisDate config month: " + err.Error())
 	}
 
-	for index := range fromThisDate {
-		fromThisDateValue, err := strconv.Atoi(fromThisDate[index])
+	// ContentURL to Date
+	cuYear, err := strconv.Atoi(contentURLDate[0])
+	if err != nil {
+		log.Fatal("Error on parse contentURLDate year: " + err.Error())
+	}
+	cuMonth, err := strconv.Atoi(contentURLDate[1])
+	if err != nil {
+		log.Fatal("Error on parse contentURLDate month: " + err.Error())
+	}
+	cuDay, err := strconv.Atoi(contentURLDate[2])
+	if err != nil {
+		log.Fatal("Error on parse contentURLDate month: " + err.Error())
+	}
+
+	ftdDate := date.New(ftdYear, time.Month(ftdMonth), ftdDay)
+	cuDate := date.New(cuYear, time.Month(cuMonth), cuDay)
+
+	if cuDate.Equal(ftdDate) {
+		ftdVal4, err := strconv.Atoi(fromThisDate[3])
 		if err != nil {
-			log.Fatal("Error on convert GenerateFromThisDate to int: " + err.Error())
+			log.Fatal("Error con convert ftdVal4 to int: " + err.Error())
 		}
-		contentURLDateValue, err := strconv.Atoi(contentURLDate[index])
+		cuVal4, err := strconv.Atoi(contentURLDate[3])
 		if err != nil {
-			log.Fatal("Error on convert ContentURLDate to int: " + err.Error())
+			log.Fatal("Error con convert culVal4 to int: " + err.Error())
 		}
-		if contentURLDateValue < fromThisDateValue {
+		if cuVal4 < ftdVal4 {
 			return false
 		}
+	} else if cuDate.Before(ftdDate) {
+		return false
 	}
 
 	return true

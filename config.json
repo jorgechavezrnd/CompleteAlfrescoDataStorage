@@ -5,5 +5,5 @@
     "password": "lrs",
     "database": "registry",
     "contentstorePath": "D:/wildfly-10/bin/alfdata/contentstore/",
-    "generateFromThisDate": "2020/3/29/21/0"
+    "generateFromThisDate": "2020/3/29/21"
 }
