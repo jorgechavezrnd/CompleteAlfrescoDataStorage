@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -17,32 +19,63 @@ type AlfContentURL struct {
 	ContentSize int64
 }
 
-// Data for connection string
-var server = "localhost"
-var port = 1433
-var user = "sa"
-var password = "sa"
-var database = "registry"
-
-// Contentstore Path
-var contentstorePath = "D:/wildfly-10/bin/alfdata/contentstore/"
+// Config ...
+type Config struct {
+	Host             string `json:"host"`
+	Port             int    `json:"port"`
+	Username         string `json:"username"`
+	Password         string `json:"password"`
+	Database         string `json:"database"`
+	ContentstorePath string `json:"contentstorePath"`
+}
 
 // Global variables
 var db *sql.DB
 var alfContentURLList []AlfContentURL
+var config = Config{}
 
 func main() {
-	createConnectionPool()
-	defer closeConnection()
-	readDataFromAlfContentURLTable()
-	createMissingFiles()
+	if setUpConfig() {
+		createConnectionPool()
+		defer closeConnection()
+		readDataFromAlfContentURLTable()
+		createMissingFiles()
+	}
+}
+
+func setUpConfig() bool {
+	jsonFile, err := os.Open("config.json")
+	if err != nil {
+		log.Println("Error on open config.json file: " + err.Error())
+		return false
+	}
+
+	defer jsonFile.Close()
+
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		log.Println("Error on read config.json file: " + err.Error())
+		return false
+	}
+
+	err = json.Unmarshal(byteValue, &config)
+	if err != nil {
+		log.Println("Error on config.json structure: " + err.Error())
+		return false
+	}
+
+	if config.ContentstorePath[len(config.ContentstorePath)-1] != '/' {
+		config.ContentstorePath = config.ContentstorePath + "/"
+	}
+
+	return true
 }
 
 func createConnectionPool() {
 	var err error
 
 	connString := fmt.Sprintf("Server=%s;user id=%s;password=%s;port=%d;database=%s",
-		server, user, password, port, database)
+		config.Host, config.Username, config.Password, config.Port, config.Database)
 
 	db, err = sql.Open("sqlserver", connString)
 	if err != nil {
@@ -108,7 +141,7 @@ func createMissingFiles() {
 	nonExistingFilesCount := 0
 
 	for index, alfContentURL := range alfContentURLList {
-		filePath := contentstorePath + alfContentURL.ContentURL
+		filePath := config.ContentstorePath + alfContentURL.ContentURL
 		_, err := os.Stat(filePath)
 		if os.IsNotExist(err) {
 			log.Printf("%d.- File %s does not exist\n", (index + 1), filePath)
@@ -116,7 +149,8 @@ func createMissingFiles() {
 
 			folderPath := getFolderPath(alfContentURL.ContentURL)
 			createFolderPath(folderPath)
-			createFile(filePath, alfContentURL.ContentSize)
+			// createFile(filePath, alfContentURL.ContentSize)
+			createFile(filePath, 1)
 		} else {
 			log.Printf("%d.- File %s exists\n", (index + 1), filePath)
 			existingFilesCount++
@@ -135,7 +169,7 @@ func getFolderPath(contentURL string) string {
 		log.Fatal("Error extracting folder path and file name to create")
 	}
 
-	folderPath := contentstorePath + strings.Join(parts[:len(parts)-1], "/")
+	folderPath := config.ContentstorePath + strings.Join(parts[:len(parts)-1], "/")
 
 	return folderPath
 }

@@ -1,0 +1,8 @@
+{
+    "host": "localhost",
+    "port": 1433,
+    "username": "sa",
+    "password": "sa",
+    "database": "registry",
+    "contentstorePath": "D:/wildfly-10/bin/alfdata/contentstore"
+}
