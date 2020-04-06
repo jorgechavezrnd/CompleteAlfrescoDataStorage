@@ -4,5 +4,5 @@
     "username": "sa",
     "password": "sa",
     "database": "registry",
-    "contentstorePath": "D:/wildfly-10/bin/alfdata/contentstore"
+    "contentstorePath": "D:/wildfly-10/bin/alfdata/contentstore/"
 }
