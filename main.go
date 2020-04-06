@@ -43,8 +43,12 @@ func main() {
 	if setUpConfig() {
 		args := os.Args[1:]
 
-		if argsContains(args, "logToFile") {
+		if argsContains(args, "logf") {
 			setUpLogFile()
+		}
+
+		if argsContains(args, "logfc") {
+			setUpLogFileAndConsole()
 		}
 
 		if argsContains(args, "test") {
@@ -72,6 +76,14 @@ func argsContains(args []string, argToFind string) bool {
 }
 
 func setUpLogFile() {
+	logFile, err := os.OpenFile("log.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	if err != nil {
+		log.Fatal("Error on create log.txt file: " + err.Error())
+	}
+	log.SetOutput(logFile)
+}
+
+func setUpLogFileAndConsole() {
 	logFile, err := os.OpenFile("log.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		log.Fatal("Error on create log.txt file: " + err.Error())
