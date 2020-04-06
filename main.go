@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -39,7 +40,12 @@ var config = Config{}
 func main() {
 	if setUpConfig() {
 		args := os.Args[1:]
-		if len(args) > 0 {
+
+		if argsContains(args, "logToFile") {
+			setUpLogFile()
+		}
+
+		if argsContains(args, "test") {
 			createConnectionPool()
 			defer closeConnection()
 			readDataFromAlfContentURLTable()
@@ -51,6 +57,25 @@ func main() {
 			createMissingFiles()
 		}
 	}
+}
+
+func argsContains(args []string, argToFind string) bool {
+	for _, arg := range args {
+		if arg == argToFind {
+			return true
+		}
+	}
+
+	return false
+}
+
+func setUpLogFile() {
+	logFile, err := os.OpenFile("log.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	if err != nil {
+		log.Fatal("Error on create log.txt file: " + err.Error())
+	}
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
 }
 
 func setUpConfig() bool {
