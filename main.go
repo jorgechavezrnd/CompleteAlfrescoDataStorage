@@ -38,10 +38,18 @@ var config = Config{}
 
 func main() {
 	if setUpConfig() {
-		createConnectionPool()
-		defer closeConnection()
-		readDataFromAlfContentURLTable()
-		createMissingFiles()
+		args := os.Args[1:]
+		if len(args) > 0 {
+			createConnectionPool()
+			defer closeConnection()
+			readDataFromAlfContentURLTable()
+			showValidAlfContentURLTableData()
+		} else {
+			createConnectionPool()
+			defer closeConnection()
+			readDataFromAlfContentURLTable()
+			createMissingFiles()
+		}
 	}
 }
 
@@ -134,6 +142,16 @@ func readDataFromAlfContentURLTable() {
 	}
 
 	log.Println("Read Alf Content URL Data End")
+}
+
+func showValidAlfContentURLTableData() {
+	log.Println("Show Valid Alf Content URL Table Data Start")
+	for index, alfContURL := range alfContentURLList {
+		if isValidDate(alfContURL.ContentURL) {
+			log.Printf("%d.- %s\n", index, alfContURL.ContentURL)
+		}
+	}
+	log.Println("Show Valid Alf Content URL Table Data End")
 }
 
 func createMissingFiles() {
