@@ -200,6 +200,8 @@ func createMissingFiles() {
 	nonExistingFilesCount := 0
 	notValidDateCount := 0
 
+	alfContentURLList = getValidAlfContentURLList()
+
 	for index, alfContentURL := range alfContentURLList {
 		filePath := config.ContentstorePath + alfContentURL.ContentURL
 		_, err := os.Stat(filePath)
@@ -226,6 +228,19 @@ func createMissingFiles() {
 	log.Printf("Existing Files Count: %d", existingFilesCount)
 	log.Printf("Non Existing Files Count: %d", nonExistingFilesCount)
 	log.Printf("Not Validate Date Count: %d", notValidDateCount)
+}
+
+func getValidAlfContentURLList() []AlfContentURL {
+	log.Println("Build Valid Alf Content URL List Start")
+	validAlfContentURLList := []AlfContentURL{}
+	for _, alfContURL := range alfContentURLList {
+		if isValidDate(alfContURL.ContentURL) {
+			validAlfContentURLList = append(validAlfContentURLList, alfContURL)
+		}
+	}
+	log.Println("Build Valid Alf Content URL List End")
+
+	return validAlfContentURLList
 }
 
 func isValidDate(contentURL string) bool {
